@@ -36,7 +36,7 @@ define([
                 };
             });
 
-            this.iframeId = html.genId();            
+            this.iframeId = html.genId();
         }
 
         makeDownloadLink(shock_url, name) {
@@ -81,7 +81,7 @@ define([
             ul({
                 style: {
                 },
-                dataBind: {               
+                dataBind: {
                     foreach: 'files'
                 }
             }, li([
@@ -95,7 +95,7 @@ define([
                     },
                     download: true,
                     target: '_blank'
-                })            
+                })
             ]))
         ];
     }
@@ -109,7 +109,7 @@ define([
     }
 
     function template() {
-        return div(gen.if('files && files.length > 0', 
+        return div(gen.if('files && files.length > 0',
             buildLinks(),
             buildNoLinks()));
     }
@@ -121,5 +121,5 @@ define([
         };
     }
 
-    return reg.registerComponent(component); 
+    return reg.registerComponent(component);
 });

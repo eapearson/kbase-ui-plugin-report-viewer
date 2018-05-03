@@ -69,5 +69,5 @@ define([
         };
     }
 
-    return reg.registerComponent(component); 
+    return reg.registerComponent(component);
 });

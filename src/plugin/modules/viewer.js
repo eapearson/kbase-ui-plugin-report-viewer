@@ -43,8 +43,6 @@ define([
             this.objectVersion = config.objectVersion;
         }
 
-        
-
         getLinks() {
             let ref = [this.workspaceId, this.objectId, this.objectVersion].join('/');
             let client = new GenericClient({
@@ -149,7 +147,6 @@ define([
         }
 
         stop() {
-            
         }
 
         detach() {
