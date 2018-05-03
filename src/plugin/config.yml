@@ -1,0 +1,29 @@
+## Plugin
+---
+package:
+    author: Erik Pearson
+    name: report-viewer
+source:
+    modules:
+install:
+    widgets:
+        -
+            module: viewer
+            name: kb_report-viewer_viewer
+            type: es6
+    types:
+        -
+            type:
+                module: KBaseReport
+                name: Report
+                version: any
+            icon:
+                type: fontAwesome
+                classes: [fa-file-o]
+            viewers:
+                -
+                    default: true
+                    title: 'Data View'
+                    widget:
+                        name: kb_report-viewer_viewer
+            panel: false
