@@ -120,7 +120,11 @@ define([
     }
 
     function template() {
-        return div(gen.if('createdObjects && createdObjects.length > 0',
+        return div({
+            style: {
+                padding: '8px'
+            }
+        }, gen.if('createdObjects && createdObjects.length > 0',
             buildCreatedObjects(),
             buildNoCreatedObjects()));
     }
