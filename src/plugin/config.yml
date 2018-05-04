@@ -11,6 +11,7 @@ install:
             module: viewer
             name: kb_report-viewer_viewer
             type: es6
+            css: true
     types:
         -
             type:
@@ -19,11 +20,11 @@ install:
                 version: any
             icon:
                 type: fontAwesome
-                classes: [fa-file-o]
+                classes: [fa-file-text-o]
             viewers:
                 -
                     default: true
-                    title: 'Data View'
+                    title: 'KBase Report'
                     widget:
                         name: kb_report-viewer_viewer
-            panel: false
+                    panel: true

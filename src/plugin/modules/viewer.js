@@ -1,39 +1,26 @@
 define([
+    'bluebird',
     'knockout',
     'kb_common/html',
     'kb_common/jsonRpc/genericClient',
     'kb_common/jsonRpc/dynamicServiceClient',
-    './components/main'
+    'kb_service/utils',
+    './components/main',
+    './model'
 ], function(
+    Promise,
     ko,
     html,
     GenericClient,
     DynamicServiceClient,
-    MainComponent
+    ServiceUtils,
+    MainComponent,
+    Model
 ) {
     'use strict';
 
     let t = html.tag,
         div = t('div');
-
-    function escapeHtml (string) {
-        if (typeof string !== 'string') {
-            return;
-        }
-        var entityMap = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            '\'': '&#39;',
-            '/': '&#x2F;',
-            '`': '&#x60;',
-            '=': '&#x3D;'
-        };
-        return String(string).replace(/[&<>"'`=/]/g, (s) => {
-            return entityMap[s];
-        });
-    }
 
     class Viewer {
         constructor(config) {
@@ -41,55 +28,13 @@ define([
             this.workspaceId = config.workspaceId;
             this.objectId = config.objectId;
             this.objectVersion = config.objectVersion;
-        }
-
-        getLinks() {
-            let ref = [this.workspaceId, this.objectId, this.objectVersion].join('/');
-            let client = new GenericClient({
-                url: this.runtime.config('services.ServiceWizard.url'),
-                token: this.runtime.service('session').getAuthToken(),
-                module: 'ServiceWizard'
-            });
-            return client.callFunc('get_service_status', [{
-                module_name: 'HTMLFileSetServ',
-                version: null
-            }])
-                .spread((serviceStatus) => {
-                    var htmlServiceURL = serviceStatus.url;
-                    if (this.report.html_links && this.report.html_links.length) {
-                        return this.report.html_links.map((item, index) => {
-                            return {
-                                name: item.name,
-                                // If label is not provided, name must be.
-                                label: escapeHtml(item.label || item.name),
-                                url: [htmlServiceURL, 'api', 'v1', ref, '$', index, item.name].join('/'),
-                                description: item.description
-                            };
-                        });
-                    } else {
-                        return [];
-                    }
-                });
-        }
-
-        fetchReport() {
-            let client = new GenericClient({
-                module: 'Workspace',
-                url: this.runtime.config('services.workspace.url'),
-                token: this.runtime.service('session').getAuthToken()
-            });
-            return client.callFunc('get_objects', [[{
-                wsid: this.workspaceId,
-                objid: this.objectId,
-                ver: this.objectVersion
-            }]])
-                .spread((object) => {
-                    // console.log('obj', object);
-                    if (!object[0]) {
-                        throw new Error('Not found');
-                    }
-                    return object[0].data;
-                });
+            this.createdObjects = null;
+  
+            this.vm = {
+                runtime: config.runtime,
+                state: ko.observable(),
+                error: ko.observable()
+            };
         }
 
         loadRootComponent() {
@@ -100,6 +45,7 @@ define([
                         params: {
                             report: 'report',
                             links: 'links',
+                            createdObjects: 'createdObjects',
                             runtime: 'runtime',
                             workspaceId: 'workspaceId',
                             objectId: 'objectId',
@@ -108,15 +54,7 @@ define([
                     }
                 }
             });
-            let vm = {
-                report: this.report,
-                links: this.links,
-                runtime: this.runtime,
-                workspaceId: self.workspaceId,
-                objectId: self.objectId,
-                objectVersion: self.objectVersion
-            };
-            ko.applyBindings(vm, this.node);
+            ko.applyBindings(this.vm, this.node);
         }
 
         // LIFECYCLE
@@ -129,20 +67,28 @@ define([
             this.workspaceId = params.workspaceId;
             this.objectId = params.objectId;
             this.objectVersion = params.objectVersion;
+            this.vm.workspaceId = params.workspaceId;
+            this.vm.objectId = params.objectId;
+            this.vm.objectVersion = params.objectVersion;
             this.node.innerHTML = html.loading();
 
-            return this.fetchReport()
+            this.model = new Model({
+                runtime: this.runtime,
+                workspaceId: params.workspaceId,
+                objectId: params.objectId,
+                objectVersion: params.objectVersion
+            });
+            this.vm.model = this.model;
+
+            return this.model.fetchReport()
                 .then((report) => {
-                    this.report = report;
-                    return this.getLinks();
+                    this.vm.report = report;
+                    return Promise.all([this.model.getLinks(), this.model.getCreatedObjects()]);
                 })
-                .then((links) => {
-                    this.links = links;
-                    // console.log('got it', result);
+                .spread((links, objects) => {
+                    this.vm.links = links;
+                    this.vm.createdObjects = objects;
                     this.loadRootComponent();
-                })
-                .catch((err) => {
-                    console.error('error', err);
                 });
         }
 

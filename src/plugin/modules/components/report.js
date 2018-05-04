@@ -29,11 +29,14 @@ define([
             if (this.report.direct_html && this.report.direct_html.length > 0) {
                 this.hasDirectHtml = true;
                 if (/<html/.test(this.report.direct_html)) {
-                    this.directHtmlDocument = true;
+                    this.hasDirectHtmlDocument = true;
                 } else {
-                    this.directHtmlDocument = false;
+                    this.hasDirectHtmlDocument = false;
                 }
+                this.wrappedDirectHtml = wrapHtmlDoc(div({
+                }, this.report.direct_html)).replace(/"/g, '&quot;');
             } else {
+                this.hasDirectHtmlDocument = false;
                 this.hasDirectHtml = false;
             }
 
@@ -49,7 +52,6 @@ define([
             this.height = this.report.html_window_height || 500;
 
             this.frameId = 'frame_' + html.genId();
-
         }
     }
 
@@ -74,6 +76,54 @@ define([
             },
             frameborder: '0',
             scrolling: 'yes'
+        });
+    }
+
+    function wrapHtmlDoc(content) {
+        if (/<html/.test(content)) {
+            console.warn('Html document inserted into iframe');
+            return content;
+        }
+        var t = html.tag,
+            htmlTag = t('html'),
+            head = t('head'),
+            body = t('body');
+        return htmlTag([
+            head(),
+            body({
+                style: {
+                    margin: '0px',
+                    padding: '0px',
+                    overflow: 'auto'
+                }
+            }, [
+                content
+            ])
+        ]);
+    }
+
+    function buildIframe() {
+        return iframe({
+            style: {
+                display: 'block',
+                width: '100%',
+                height: 'auto',
+                margin: 0,
+                padding: 0
+            },
+            dataBind: {
+                style: {
+                    'max-height': 'height + "px"'
+                },
+                attr: {
+                    id: 'frameId',
+                    'data-frame': 'frameId',
+                    srcdoc: 'wrappedDirectHtml'
+                }
+            },
+            frameborder: '0',
+            scrolling: 'no',
+            // srcdoc: content
         });
     }
 
@@ -117,14 +167,17 @@ define([
         }, 'View report in separate window'));
     }
 
+    // inserts html into the iframe as content
     function buildIframeDirect() {
-        return 'iframe direct';
+        return buildIframe();
     }
 
     function buildDirectHtml() {
-        return gen.if('directHtmlDocument',
+        return gen.if('hasDirectHtmlDocument',
             buildIframeDataPlain(),
-            buildIframeDirect());
+            gen.if('hasDirectHtml',
+                buildIframeDirect(),
+                'nothing'));
     }
 
     function buildNotFound() {
@@ -151,8 +204,7 @@ define([
 
     function template() {
         return div({
-            style: {
-            }
+            style: {}
         }, [
             gen.if('hasDirectHtmlIndex', buildDirectHtmlIndex(), buildDirectHtml())
 
