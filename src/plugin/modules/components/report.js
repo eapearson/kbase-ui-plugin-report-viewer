@@ -34,7 +34,9 @@ define([
                     this.hasDirectHtmlDocument = false;
                 }
                 this.wrappedDirectHtml = wrapHtmlDoc(div({
-                }, this.report.direct_html)).replace(/"/g, '&quot;');
+                }, this.report.direct_html));
+
+                console.log('wrapped?', this.wrappedDirectHtml);
             } else {
                 this.hasDirectHtmlDocument = false;
                 this.hasDirectHtml = false;

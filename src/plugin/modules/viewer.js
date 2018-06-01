@@ -1,6 +1,7 @@
 define([
     'bluebird',
     'knockout',
+    'kb_lib/widgetUtils',
     'kb_common/html',
     'kb_common/jsonRpc/genericClient',
     'kb_common/jsonRpc/dynamicServiceClient',
@@ -10,6 +11,7 @@ define([
 ], function(
     Promise,
     ko,
+    widgetUtils,
     html,
     GenericClient,
     DynamicServiceClient,
@@ -29,7 +31,7 @@ define([
             this.objectId = config.objectId;
             this.objectVersion = config.objectVersion;
             this.createdObjects = null;
-  
+
             this.vm = {
                 runtime: config.runtime,
                 state: ko.observable(),
@@ -64,19 +66,28 @@ define([
         }
 
         start(params) {
-            this.workspaceId = params.workspaceId;
-            this.objectId = params.objectId;
-            this.objectVersion = params.objectVersion;
-            this.vm.workspaceId = params.workspaceId;
-            this.vm.objectId = params.objectId;
-            this.vm.objectVersion = params.objectVersion;
+            let p = new widgetUtils.Params(params);
+            this.workspaceId = p.check('workspaceId','number', {
+                required: true
+            });
+            this.objectId = p.check('objectId', 'number', {
+                required: true
+            });
+            this.objectVersion = p.check('objectVersion', 'number', {
+                required: true
+            });
+
+            this.vm.workspaceId = this.workspaceId;
+            this.vm.objectId = this.objectId;
+            this.vm.objectVersion = this.objectVersion;
+
             this.node.innerHTML = html.loading();
 
             this.model = new Model({
                 runtime: this.runtime,
-                workspaceId: params.workspaceId,
-                objectId: params.objectId,
-                objectVersion: params.objectVersion
+                workspaceId: this.workspaceId,
+                objectId: this.objectId,
+                objectVersion: this.objectVersion
             });
             this.vm.model = this.model;
 

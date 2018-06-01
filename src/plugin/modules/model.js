@@ -1,20 +1,16 @@
 define([
     'bluebird',
-    'knockout',
     'kb_common/jsonRpc/genericClient',
-    'kb_common/jsonRpc/dynamicServiceClient',
     'kb_service/utils'
 ], function(
     Promise,
-    ko,
     GenericClient,
-    DynamicServiceClient,
     ServiceUtils
 ) {
     'use strict';
 
-    function escapeHtml (string) {
-        if (typeof string !== 'string') {
+    function escapeHtml (toEscape) {
+        if (typeof toEscape !== 'string') {
             return;
         }
         var entityMap = {
@@ -27,7 +23,7 @@ define([
             '`': '&#x60;',
             '=': '&#x3D;'
         };
-        return String(string).replace(/[&<>"'`=/]/g, (s) => {
+        return String(toEscape).replace(/[&<>"'`=/]/g, (s) => {
             return entityMap[s];
         });
     }
@@ -108,12 +104,13 @@ define([
         }
 
         fetchReport() {
-            let client = new GenericClient({
+            let workspace = new GenericClient({
                 module: 'Workspace',
                 url: this.runtime.config('services.workspace.url'),
                 token: this.runtime.service('session').getAuthToken()
             });
-            return client.callFunc('get_objects', [[{
+
+            return workspace.callFunc('get_objects', [[{
                 wsid: this.workspaceId,
                 objid: this.objectId,
                 ver: this.objectVersion
@@ -126,7 +123,6 @@ define([
                     return this.report;
                 });
         }
-
     }
 
     return Model;

@@ -60,7 +60,7 @@ define([
 
     function buildCreatedObjects() {
         return table({
-            class: 'table table-striped kb-table-lite'
+            class: 'table kb-table-lite'
         }, [
             thead(tr([
                 th({
